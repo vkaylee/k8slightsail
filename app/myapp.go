@@ -20,24 +20,96 @@ type App struct {
 	YmlConf	*ymlconfig.Config
 	Ctx		context.Context
 }
-
+type openPorts struct {
+	from		*int64
+	to			*int64
+	protocol	*string
+}
 func (a *App) OpenInstancePublicPorts()  {
+	// Define master ports
+	masterPorts := make([]*lightsail.PortInfo,0)
+	masterPorts = append(masterPorts,
+		&lightsail.PortInfo{
+			FromPort:	utils.Init64(22),
+			ToPort:		utils.Init64(22),
+			Protocol:	utils.String("tcp"),
+		},
+		&lightsail.PortInfo{
+			FromPort:	utils.Init64(80),
+			ToPort:		utils.Init64(80),
+			Protocol:	utils.String("tcp"),
+		},
+		&lightsail.PortInfo{
+			FromPort:	utils.Init64(443),
+			ToPort:		utils.Init64(443),
+			Protocol:	utils.String("tcp"),
+		},
+		&lightsail.PortInfo{
+			FromPort:	utils.Init64(2379),
+			ToPort:		utils.Init64(2379),
+			Protocol:	utils.String("tcp"),
+		},
+		&lightsail.PortInfo{
+			FromPort:	utils.Init64(6443),
+			ToPort:		utils.Init64(6443),
+			Protocol:	utils.String("tcp"),
+		},
+		&lightsail.PortInfo{
+			FromPort:	utils.Init64(10250),
+			ToPort:		utils.Init64(10252),
+			Protocol:	utils.String("tcp"),
+		},
+	)
+	// Define worker ports
+	workerPorts := make([]*lightsail.PortInfo,0)
+	workerPorts = append(workerPorts,
+		&lightsail.PortInfo{
+			FromPort:	utils.Init64(22),
+			ToPort:		utils.Init64(22),
+			Protocol:	utils.String("tcp"),
+		},
+		&lightsail.PortInfo{
+			FromPort:	utils.Init64(30000),
+			ToPort:		utils.Init64(32767),
+			Protocol:	utils.String("tcp"),
+		},
+		&lightsail.PortInfo{
+			FromPort:	utils.Init64(10250),
+			ToPort:		utils.Init64(10250),
+			Protocol:	utils.String("tcp"),
+		},
+	)
+	// Define loadbalancing ports
+	loadbalancingPorts := make([]*lightsail.PortInfo,0)
+	loadbalancingPorts = append(loadbalancingPorts,
+		&lightsail.PortInfo{
+			FromPort:	utils.Init64(22),
+			ToPort:		utils.Init64(22),
+			Protocol:	utils.String("tcp"),
+		},
+		&lightsail.PortInfo{
+			FromPort:	utils.Init64(6443),
+			ToPort:		utils.Init64(6443),
+			Protocol:	utils.String("tcp"),
+		},
+	)
 	for _, node := range a.YmlConf.Template.Nodes {
 		a.waitForLightsailInstance(node.Name)
 		log.Printf("Setting ports for %s", *node.Name)
 		switch *node.Type {
 		case nodeinfo.MasterNodeType:
-			a.openMasterInstancePublicPorts(node.Name)
+			a.openInstancePublicPorts(node.Name, masterPorts)
 		case nodeinfo.WorkerNodeType:
-			a.openWorkerInstancePublicPorts(node.Name)
+			a.openInstancePublicPorts(node.Name, workerPorts)
 		case nodeinfo.LoadbalancingType:
-			a.openLoadbalancingInstancePublicPorts(node.Name)
+			a.openInstancePublicPorts(node.Name, loadbalancingPorts)
 		default:
 			break
 		}
 	}
 }
-func (a *App) openMasterInstancePublicPorts(instanceName *string)  {
+
+func (a *App) openInstancePublicPorts(instanceName *string, ports []*lightsail.PortInfo)  {
 	ctx, cancelFn := context.WithTimeout(a.Ctx, time.Minute * 5)
 	// Ensure the context is canceled to prevent leaking.
 	// See context package for more information, https://golang.org/pkg/context/
@@ -46,89 +118,7 @@ func (a *App) openMasterInstancePublicPorts(instanceName *string)  {
 	}
 	_, _ = a.AppConf.Lightsail.PutInstancePublicPortsWithContext(ctx, &lightsail.PutInstancePublicPortsInput{
 		InstanceName: instanceName,
-		PortInfos:    []*lightsail.PortInfo{
-			&lightsail.PortInfo{
-				FromPort: utils.Init64(22),
-				Protocol: utils.String("tcp"),
-				ToPort:   utils.Init64(22),
-			},
-			&lightsail.PortInfo{
-				FromPort: utils.Init64(80),
-				Protocol: utils.String("tcp"),
-				ToPort:   utils.Init64(80),
-			},
-			&lightsail.PortInfo{
-				FromPort: utils.Init64(443),
-				Protocol: utils.String("tcp"),
-				ToPort:   utils.Init64(443),
-			},
-			&lightsail.PortInfo{
-				FromPort: utils.Init64(2379),
-				Protocol: utils.String("tcp"),
-				ToPort:   utils.Init64(2380),
-			},
-			&lightsail.PortInfo{
-				FromPort: utils.Init64(6443),
-				Protocol: utils.String("tcp"),
-				ToPort:   utils.Init64(6443),
-			},
-			&lightsail.PortInfo{
-				FromPort: utils.Init64(10250),
-				Protocol: utils.String("tcp"),
-				ToPort:   utils.Init64(10252),
-			},
-		},
-	})
-}
-func (a *App) openWorkerInstancePublicPorts(instanceName *string)  {
-	ctx, cancelFn := context.WithTimeout(a.Ctx, time.Minute * 5)
-	// Ensure the context is canceled to prevent leaking.
-	// See context package for more information, https://golang.org/pkg/context/
-	if cancelFn != nil {
-		defer cancelFn()
-	}
-	_, _ = a.AppConf.Lightsail.PutInstancePublicPortsWithContext(ctx, &lightsail.PutInstancePublicPortsInput{
-		InstanceName: instanceName,
-		PortInfos: []*lightsail.PortInfo{
-			&lightsail.PortInfo{
-				FromPort: utils.Init64(22),
-				Protocol: utils.String("tcp"),
-				ToPort:   utils.Init64(22),
-			},
-			&lightsail.PortInfo{
-				FromPort: utils.Init64(30000),
-				Protocol: utils.String("tcp"),
-				ToPort:   utils.Init64(32767),
-			},
-			&lightsail.PortInfo{
-				FromPort: utils.Init64(10250),
-				Protocol: utils.String("tcp"),
-				ToPort:   utils.Init64(10250),
-			},
-		},
-	})
-}
-func (a *App) openLoadbalancingInstancePublicPorts(instanceName *string)  {
-	ctx, cancelFn := context.WithTimeout(a.Ctx, time.Minute * 5)
-	// Ensure the context is canceled to prevent leaking.
-	// See context package for more information, https://golang.org/pkg/context/
-	if cancelFn != nil {
-		defer cancelFn()
-	}
-	_, _ = a.AppConf.Lightsail.PutInstancePublicPortsWithContext(ctx, &lightsail.PutInstancePublicPortsInput{
-		InstanceName: instanceName,
-		PortInfos: []*lightsail.PortInfo{
-			&lightsail.PortInfo{
-				FromPort: utils.Init64(22),
-				Protocol: utils.String("tcp"),
-				ToPort:   utils.Init64(22),
-			},
-			&lightsail.PortInfo{
-				FromPort: utils.Init64(6443),
-				Protocol: utils.String("tcp"),
-				ToPort:   utils.Init64(6443),
-			},
-		},
+		PortInfos: ports,
 	})
 }
 func (a *App) CreateInstances(nodes []*nodeinfo.Node, prefixName *string) {
