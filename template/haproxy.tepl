@@ -1,0 +1,12 @@
+frontend kubernetes
+	bind 172.26.1.199:6443
+	option tcplog
+	mode tcp
+	default_backend kubernetes-master-nodes
+backend kubernetes-master-nodes
+	mode tcp
+	balance roundrobin
+	option tcp-check
+	server k8sm1 172.26.13.5:6443 check fall 3 rise 2
+	server k8sm2 172.26.23.116:6443 check fall 3 rise 2
+	server k8sm3 172.26.47.46:6443 check fall 3 rise 2
