@@ -20,11 +20,7 @@ type App struct {
 	YmlConf	*ymlconfig.Config
 	Ctx		context.Context
 }
-type openPorts struct {
-	from		*int64
-	to			*int64
-	protocol	*string
-}
+
 func (a *App) OpenInstancePublicPorts()  {
 	// Define master ports
 	masterPorts := make([]*lightsail.PortInfo,0)
