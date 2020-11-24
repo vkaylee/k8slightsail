@@ -6,12 +6,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"k8s_lightsail/config"
+	"k8s_lightsail/install_scripts"
 	"k8s_lightsail/nodeinfo"
 	"k8s_lightsail/utils"
 	"k8s_lightsail/ymlconfig"
 	"log"
 	"math/rand"
-	"strings"
 	"time"
 )
 
@@ -126,12 +126,24 @@ func (a *App) CreateInstances(nodes []*nodeinfo.Node, prefixName *string) {
 	}
 	strZones := a.getStrZones()
 	if len(strZones) > 0 {
-		userData := a.loadUserData()
+		// Init user scripts
+		allUserScripts := install_scripts.Ubuntu{}
+		allUserScripts.Init()
 
 		for index, node := range nodes {
-			uData := userData
-			if strings.EqualFold(nodeinfo.LoadbalancingType, *node.Type) {
-				uData = utils.String("sudo apt-get install haproxy -y")
+			scripts := make([]*string,0)
+			switch *node.Type {
+			case nodeinfo.MasterNodeType:
+				scripts = allUserScripts.GetMasterScripts()
+			case nodeinfo.WorkerNodeType:
+				scripts = allUserScripts.GetWorkerScripts()
+			case nodeinfo.LoadbalancingType:
+				scripts = allUserScripts.GetLoadbalancingScripts()
+			}
+
+			userScript := ""
+			for _, v := range scripts {
+				userScript = fmt.Sprintf("%s\n%s", userScript, *v)
 			}
 			result, err := a.AppConf.Lightsail.CreateInstancesWithContext(
 				ctx,
@@ -140,7 +152,7 @@ func (a *App) CreateInstances(nodes []*nodeinfo.Node, prefixName *string) {
 					BlueprintId:      	node.Blueprint.BlueprintId,
 					BundleId:         	node.Bundle.BundleId,
 					KeyPairName:		a.AppConf.KeyPairName,
-					UserData:			uData,
+					UserData:			utils.String(userScript),
 					InstanceNames: []*string{
 						utils.String(fmt.Sprintf("%s-%s-%d",*prefixName,*node.Type,rand.Int())),
 					},
@@ -193,14 +205,6 @@ func (a *App) DeleteInstances()  {
 			log.Printf("Deleted: %s\n", *result.Operations[0].ResourceName)
 		}
 	}
-}
-func (a *App) loadUserData() *string {
-	userDataFile := utils.InitFileWithPath(utils.String("userdata.sh"))
-	err := userDataFile.Loadfile()
-	if err != nil {
-		return utils.String("")
-	}
-	return userDataFile.GetContents()
 }
 func (a *App) getInstanceState(instanceName *string) (*lightsail.GetInstanceStateOutput, error) {
 	return a.AppConf.Lightsail.GetInstanceState(&lightsail.GetInstanceStateInput{
