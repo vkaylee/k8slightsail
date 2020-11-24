@@ -15,6 +15,7 @@ import (
 
 const UpActionStr = "up"
 const DownActionStr = "down"
+const LsActionStr 	= "ls"
 
 type Config struct {
 	Region			*lightsail.Region

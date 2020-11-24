@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/jedib0t/go-pretty/table"
 	"k8s_lightsail/app"
 	"k8s_lightsail/config"
 	"k8s_lightsail/utils"
@@ -45,27 +46,29 @@ func main() {
 	if err := a.YmlConf.ReadConfig(); err != nil {
 		isValidYmlConfig = false
 	}
-	/**
+	if isValidYmlConfig {
+		/**
 		If the config file doest have SSH key
-	 */
-	if strings.EqualFold(*a.YmlConf.Template.SSHPublicKeyStr,"") || strings.EqualFold(*a.YmlConf.Template.SSHPrivateKeyStr,"") {
-		// Gen ssh KEY
-		pubKey, privKey, err := utils.MakeSSHKeyPair()
-		if err != nil {
-			log.Println(err)
+		*/
+		if strings.EqualFold(*a.YmlConf.Template.SSHPublicKeyStr,"") || strings.EqualFold(*a.YmlConf.Template.SSHPrivateKeyStr,"") {
+			// Gen ssh KEY
+			pubKey, privKey, err := utils.MakeSSHKeyPair()
+			if err != nil {
+				log.Println(err)
+			}
+			a.YmlConf.Template.SSHPrivateKeyStr = privKey
+			a.YmlConf.Template.SSHPublicKeyStr = pubKey
 		}
-		a.YmlConf.Template.SSHPrivateKeyStr = privKey
-		a.YmlConf.Template.SSHPublicKeyStr = pubKey
+		// Copy SSH key in YAML to app config
+		a.AppConf.PrivateKeyStr = a.YmlConf.Template.SSHPrivateKeyStr
+		a.AppConf.PublicKeyStr = a.YmlConf.Template.SSHPublicKeyStr
+		// Generate key pair name
+		if strings.EqualFold(*a.YmlConf.Template.SSHKeyPairName,"") {
+			a.YmlConf.Template.SSHKeyPairName = utils.String(fmt.Sprintf("sshkey-%d",rand.Int()))
+		}
+		// Set key pair name to app config
+		a.AppConf.KeyPairName = a.YmlConf.Template.SSHKeyPairName
 	}
-	// Copy SSH key in YAML to app config
-	a.AppConf.PrivateKeyStr = a.YmlConf.Template.SSHPrivateKeyStr
-	a.AppConf.PublicKeyStr = a.YmlConf.Template.SSHPublicKeyStr
-	// Generate key pair name
-	if strings.EqualFold(*a.YmlConf.Template.SSHKeyPairName,"") {
-		a.YmlConf.Template.SSHKeyPairName = utils.String(fmt.Sprintf("sshkey-%d",rand.Int()))
-	}
-	// Set key pair name to app config
-	a.AppConf.KeyPairName = a.YmlConf.Template.SSHKeyPairName
 	/**
 	**
 	**		MAIN PROCESS
@@ -94,6 +97,21 @@ func main() {
 			}
 			a.YmlConf.ConfigFile.RemoveFile()
 		}
+	case config.LsActionStr:
+		if isValidYmlConfig {
+			a.AppConf.Init(config.LsActionStr, a.YmlConf.Template.Region)
+			// Show table
+			t := table.NewWriter()
+			t.SetOutputMirror(os.Stdout)
+			t.AppendHeader(table.Row{"#", "Node name", "Type", "Username", "Public IP", "Private IP", "Zone"})
+			for index, node := range a.YmlConf.Template.Nodes {
+				t.AppendRows([]table.Row{
+					{index+1, *node.Name, *node.Type, *node.Username, *node.PublicIp, *node.PrivateIp, *node.Zone},
+				})
+			}
+			t.Render()
+		}
+
 
 	default:
 		fmt.Printf("expected %s or %s subcommands", config.UpActionStr, config.DownActionStr)
