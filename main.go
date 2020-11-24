@@ -46,29 +46,27 @@ func main() {
 	if err := a.YmlConf.ReadConfig(); err != nil {
 		isValidYmlConfig = false
 	}
-	if isValidYmlConfig {
-		/**
-		If the config file doest have SSH key
-		*/
-		if strings.EqualFold(*a.YmlConf.Template.SSHPublicKeyStr,"") || strings.EqualFold(*a.YmlConf.Template.SSHPrivateKeyStr,"") {
-			// Gen ssh KEY
-			pubKey, privKey, err := utils.MakeSSHKeyPair()
-			if err != nil {
-				log.Println(err)
-			}
-			a.YmlConf.Template.SSHPrivateKeyStr = privKey
-			a.YmlConf.Template.SSHPublicKeyStr = pubKey
+	/**
+	If the config file doest have SSH key
+	*/
+	if strings.EqualFold(*a.YmlConf.Template.SSHPublicKeyStr,"") || strings.EqualFold(*a.YmlConf.Template.SSHPrivateKeyStr,"") {
+		// Gen ssh KEY
+		pubKey, privKey, err := utils.MakeSSHKeyPair()
+		if err != nil {
+			log.Println(err)
 		}
-		// Copy SSH key in YAML to app config
-		a.AppConf.PrivateKeyStr = a.YmlConf.Template.SSHPrivateKeyStr
-		a.AppConf.PublicKeyStr = a.YmlConf.Template.SSHPublicKeyStr
-		// Generate key pair name
-		if strings.EqualFold(*a.YmlConf.Template.SSHKeyPairName,"") {
-			a.YmlConf.Template.SSHKeyPairName = utils.String(fmt.Sprintf("sshkey-%d",rand.Int()))
-		}
-		// Set key pair name to app config
-		a.AppConf.KeyPairName = a.YmlConf.Template.SSHKeyPairName
+		a.YmlConf.Template.SSHPrivateKeyStr = privKey
+		a.YmlConf.Template.SSHPublicKeyStr = pubKey
 	}
+	// Copy SSH key in YAML to app config
+	a.AppConf.PrivateKeyStr = a.YmlConf.Template.SSHPrivateKeyStr
+	a.AppConf.PublicKeyStr = a.YmlConf.Template.SSHPublicKeyStr
+	// Generate key pair name
+	if strings.EqualFold(*a.YmlConf.Template.SSHKeyPairName,"") {
+		a.YmlConf.Template.SSHKeyPairName = utils.String(fmt.Sprintf("sshkey-%d",rand.Int()))
+	}
+	// Set key pair name to app config
+	a.AppConf.KeyPairName = a.YmlConf.Template.SSHKeyPairName
 	/**
 	**
 	**		MAIN PROCESS
