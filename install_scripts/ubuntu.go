@@ -14,6 +14,7 @@ func (u *Ubuntu) Init() {
 	a = append(a,u.basicAppScript()...)
 	a = append(a,u.addDockerRepoScript()...)
 	a = append(a,u.containerdScript()...)
+	a = append(a,u.containerdConfigScript()...)
 	a = append(a,u.addKubeRepoScript()...)
 	a = append(a,u.addK8sConfigScript()...)
 	a = append(a,u.kubeadmKubeletScript()...)
@@ -25,6 +26,7 @@ func (u *Ubuntu) Init() {
 	b = append(b,u.basicAppScript()...)
 	b = append(b,u.addDockerRepoScript()...)
 	b = append(b,u.containerdScript()...)
+	b = append(b,u.containerdConfigScript()...)
 	b = append(b,u.addKubeRepoScript()...)
 	b = append(b,u.addK8sConfigScript()...)
 	b = append(b,u.kubeadmKubeletScript()...)
@@ -123,5 +125,12 @@ func (u Ubuntu) haproxyScript() []*string {
 	return scripts{
 		utils.String("sudo apt-get update"),
 		utils.String("sudo apt-get install -y haproxy"),
+	}
+}
+func (u Ubuntu) containerdConfigScript() []*string {
+	return scripts{
+		utils.String("cat <<EOF | tee /etc/containerd/config.toml\nversion = 2\nroot = \"/var/lib/containerd\"\nstate = \"/run/containerd\"\nplugin_dir = \"\"\ndisabled_plugins = []\nrequired_plugins = []\noom_score = 0\n\n[grpc]\n  address = \"/run/containerd/containerd.sock\"\n  tcp_address = \"\"\n  tcp_tls_cert = \"\"\n  tcp_tls_key = \"\"\n  uid = 0\n  gid = 0\n  max_recv_message_size = 16777216\n  max_send_message_size = 16777216\n\n[ttrpc]\n  address = \"\"\n  uid = 0\n  gid = 0\n\n[debug]\n  address = \"\"\n  uid = 0\n  gid = 0\n  level = \"\"\n\n[metrics]\n  address = \"\"\n  grpc_histogram = false\n\n[cgroup]\n  path = \"\"\n\n[timeouts]\n  \"io.containerd.timeout.shim.cleanup\" = \"5s\"\n  \"io.containerd.timeout.shim.load\" = \"5s\"\n  \"io.containerd.timeout.shim.shutdown\" = \"3s\"\n  \"io.containerd.timeout.task.state\" = \"2s\"\n\n[plugins]\n  [plugins.\"io.containerd.gc.v1.scheduler\"]\n\tpause_threshold = 0.02\n\tdeletion_threshold = 0\n\tmutation_threshold = 100\n\tschedule_delay = \"0s\"\n\tstartup_delay = \"100ms\"\n  [plugins.\"io.containerd.grpc.v1.cri\"]\n\tdisable_tcp_service = true\n\tstream_server_address = \"127.0.0.1\"\n\tstream_server_port = \"0\"\n\tstream_idle_timeout = \"4h0m0s\"\n\tenable_selinux = false\n\tsandbox_image = \"k8s.gcr.io/pause:3.1\"\n\tstats_collect_period = 10\n\tsystemd_cgroup = false\n\tenable_tls_streaming = false\n\tmax_container_log_line_size = 16384\n\tdisable_cgroup = false\n\tdisable_apparmor = false\n\trestrict_oom_score_adj = false\n\tmax_concurrent_downloads = 3\n\tdisable_proc_mount = false\n\t[plugins.\"io.containerd.grpc.v1.cri\".containerd]\n\t  snapshotter = \"overlayfs\"\n\t  default_runtime_name = \"runc\"\n\t  no_pivot = false\n\t  [plugins.\"io.containerd.grpc.v1.cri\".containerd.default_runtime]\n\t\truntime_type = \"\"\n\t\truntime_engine = \"\"\n\t\truntime_root = \"\"\n\t\tprivileged_without_host_devices = false\n\t  [plugins.\"io.containerd.grpc.v1.cri\".containerd.untrusted_workload_runtime]\n\t\truntime_type = \"\"\n\t\truntime_engine = \"\"\n\t\truntime_root = \"\"\n\t\tprivileged_without_host_devices = false\n\t  [plugins.\"io.containerd.grpc.v1.cri\".containerd.runtimes]\n\t\t[plugins.\"io.containerd.grpc.v1.cri\".containerd.runtimes.runc]\n\t\t  runtime_type = \"io.containerd.runc.v1\"\n\t\t  runtime_engine = \"\"\n\t\t  runtime_root = \"\"\n\t\t  privileged_without_host_devices = false\n\t\t[plugins.\"io.containerd.grpc.v1.cri\".containerd.runtimes.runc.options]\n\t\t  SystemdCgroup = true\n\t[plugins.\"io.containerd.grpc.v1.cri\".cni]\n\t  bin_dir = \"/opt/cni/bin\"\n\t  conf_dir = \"/etc/cni/net.d\"\n\t  max_conf_num = 1\n\t  conf_template = \"\"\n\t[plugins.\"io.containerd.grpc.v1.cri\".registry]\n\t  [plugins.\"io.containerd.grpc.v1.cri\".registry.mirrors]\n\t\t[plugins.\"io.containerd.grpc.v1.cri\".registry.mirrors.\"docker.io\"]\n\t\t  endpoint = [\"https://registry-1.docker.io\"]\n\t[plugins.\"io.containerd.grpc.v1.cri\".x509_key_pair_streaming]\n\t  tls_cert_file = \"\"\n\t  tls_key_file = \"\"\n  [plugins.\"io.containerd.internal.v1.opt\"]\n\tpath = \"/opt/containerd\"\n  [plugins.\"io.containerd.internal.v1.restart\"]\n\tinterval = \"10s\"\n  [plugins.\"io.containerd.metadata.v1.bolt\"]\n\tcontent_sharing_policy = \"shared\"\n  [plugins.\"io.containerd.monitor.v1.cgroups\"]\n\tno_prometheus = false\n  [plugins.\"io.containerd.runtime.v1.linux\"]\n\tshim = \"containerd-shim\"\n\truntime = \"runc\"\n\truntime_root = \"\"\n\tno_shim = false\n\tshim_debug = false\n  [plugins.\"io.containerd.runtime.v2.task\"]\n\tplatforms = [\"linux/amd64\"]\n  [plugins.\"io.containerd.service.v1.diff-service\"]\n\tdefault = [\"walking\"]\n  [plugins.\"io.containerd.snapshotter.v1.devmapper\"]\n\troot_path = \"\"\n\tpool_name = \"\"\n\tbase_image_size = \"\"\nEOF"),
+		// Restart containerd
+		utils.String("systemctl restart containerd"),
 	}
 }
