@@ -19,7 +19,7 @@ https://golang.org/
 ### Init cluster
 `k8s_lightsail up`
 
-config.yml file is going to be created like
+config.yml file is going to be created automatically like
     
     region: ap-northeast-1
     nodes:
