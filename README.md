@@ -97,5 +97,8 @@ config.yml file is going to be created like
     ssh_public_key: |
       ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAgQCyJ5onfJVLZmRGq7Jdm9ujdEC97snUL12qA7JS6YBOPGELeroeUGaTEqj5Ib0rhR+J7mOIVNKHrS/gmkVMe4vCNiiCtU1zROVQ9TdF6U9CvY7PUQlDdow778mW6RSQ1MZkcXsTSbSGdIBhPDV0mz71dipxoLuTAz6ckGfHzgGapG==
     
+### Next step
+    - Config your loadbalancer with IP masters as layer 4
+    - Init k8s cluster at master node with control lane IP = loadbalancer IP
 ### Delete cluster
 `k8s_lightsail down`
