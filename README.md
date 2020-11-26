@@ -11,6 +11,10 @@ Some tools are preinstalled:
 - Master: kubeadm, containerd, curl, kubectl, kubelet (systemd is preconfigured)
 - Worker: kubeadm, containerd, curl, kubelet (systemd is preconfigured)
 - Loadbalancing: curl, haproxy
+## Tested
+
+- Ubuntu 20.04 LTS
+
 ## Install golang compiler
 https://golang.org/
 ## Install this app
