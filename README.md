@@ -8,9 +8,22 @@ It's just using for lab k8s. Provision when you need, delete it when you dont ne
 - Loadbalancing: 1
 
 Some tools are preinstalled:
-- Master: kubeadm, containerd, curl, kubectl, kubelet (systemd is preconfigured)
-- Worker: kubeadm, containerd, curl, kubelet (systemd is preconfigured)
-- Loadbalancing: curl, haproxy
+- Master: (systemd is preconfigured)
+    - kubeadm
+    - containerd
+    - curl
+    - kubectl
+    - kubelet
+    - nfs-common
+- Worker: (systemd is preconfigured)
+    - kubeadm
+    - containerd
+    - curl
+    - kubelet
+    - nfs-common
+- Loadbalancing:
+    - curl
+    - haproxy
 ## Tested
 
 - Ubuntu 20.04 LTS
