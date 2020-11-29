@@ -15,12 +15,14 @@ Some tools are preinstalled:
     - kubectl
     - kubelet
     - nfs-common
+    - open-iscsi
 - Worker: (systemd is preconfigured)
     - kubeadm
     - containerd
     - curl
     - kubelet
     - nfs-common
+    - open-iscsi
 - Loadbalancing:
     - curl
     - haproxy
