@@ -47,24 +47,19 @@ func MakeSSHKeyPair() (*string, *string, error) {
 
 	return String(pubKeyBuf.String()), String(privKeyBuf.String()), nil
 }
-func CreateTempFile() *os.File {
+func CreateTempFile(contents *string, prefix *string) *os.File {
 	// Create our Temp File:  This will create a filename like /tmp/prefix-123456
 	// We can use a pattern of "pre-*.txt" to get an extension like: /tmp/pre-123456.txt
-	tmpFile, err := ioutil.TempFile(os.TempDir(), "prefix-")
+	tmpFile, err := ioutil.TempFile(os.TempDir(), *prefix)
 	if err != nil {
 		log.Fatal("Cannot create temporary file", err)
 	}
 
 
 	// Example writing to the file
-	text := []byte("This is a golangcode.com example!")
+	text := []byte(*contents)
 	if _, err = tmpFile.Write(text); err != nil {
 		log.Fatal("Failed to write to temporary file", err)
-	}
-
-	// Close the file
-	if err := tmpFile.Close(); err != nil {
-		log.Fatal(err)
 	}
 	return tmpFile
 }

@@ -16,6 +16,7 @@ import (
 const UpActionStr = "up"
 const DownActionStr = "down"
 const LsActionStr 	= "ls"
+const SSHActionStr	= "ssh"
 
 type Config struct {
 	Region			*lightsail.Region
