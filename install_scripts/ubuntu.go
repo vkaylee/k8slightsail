@@ -20,6 +20,7 @@ func (u *Ubuntu) Init() {
 	a = append(a,u.kubeadmKubeletScript()...)
 	a = append(a,u.kubectlScript()...)
 	a = append(a,u.nfsSupportScript()...)
+	a = append(a,u.openIscsiScript()...)
 	u.masterScripts = a
 
 	b := scripts{}
@@ -32,6 +33,7 @@ func (u *Ubuntu) Init() {
 	b = append(b,u.addK8sConfigScript()...)
 	b = append(b,u.kubeadmKubeletScript()...)
 	b = append(b,u.nfsSupportScript()...)
+	b = append(b,u.openIscsiScript()...)
 	u.workerScripts = b
 
 	c := scripts{}
@@ -135,6 +137,13 @@ func (u Ubuntu) nfsSupportScript() []*string {
 	return scripts{
 		utils.String("apt-get update"),
 		utils.String("apt-get install -y nfs-common"),
+	}
+}
+
+func (u *Ubuntu) openIscsiScript() []*string {
+	return scripts{
+		utils.String("apt-get update"),
+		utils.String("apt-get install -y open-iscsi"),
 	}
 }
 
