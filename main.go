@@ -242,8 +242,9 @@ func playWithSSH(client *goph.Client, machineName string) {
 
 			err = client.Download(parts[1], parts[2])
 
-			fmt.Println("download err: ", err)
-			break
+			if err != nil {
+				log.Println(err)
+			}
 
 		case "upload":
 
@@ -252,9 +253,9 @@ func playWithSSH(client *goph.Client, machineName string) {
 			}
 
 			err = client.Upload(parts[1], parts[2])
-
-			fmt.Println("upload err: ", err)
-			break
+			if err != nil {
+				log.Println(err)
+			}
 
 		default:
 			command, err := client.Command(parts[0], parts[1:]...)
